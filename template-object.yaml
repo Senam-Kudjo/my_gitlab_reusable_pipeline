@@ -1,0 +1,213 @@
+### THIS IS THE TEMPLATE FILE THE SCRIPT WILL USE FOR CHECKING AND CREATING NEW KUBERNETES OBJECTS AND/OR inserting new images into already exisiting objects.
+### PUT THIS FILE IN THE ROOT OF REPO PATH eg. /auto-filler/template-object.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: app_name-service
+  namespace: NSENVIRONMENT
+spec:
+  selector:
+    app: app_name
+  type: ClusterIP
+  # sessionAffinity: None
+  # sessionAffinityConfig:
+  #   clientIP:
+  #     timeoutSeconds: 10800
+  ports:
+  - name: app_name
+    protocol: TCP
+    port: PORTINGO
+    targetPort: PORTINGO
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app_name-deployment
+  namespace: NSENVIRONMENT
+  labels:
+    app: app_name
+spec:
+  minReadySeconds: 15
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: app_name
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: app_name
+    spec:
+      containers:
+      - name: app_name
+        image: 905418218251.dkr.ecr.us-east-1.amazonaws.com/reimage
+        imagePullPolicy: Always
+        ports:
+        - containerPort: PORTINGO
+          name: app_name
+        volumeMounts:
+        - name: app_name-volume
+          mountPath: /home/app/config
+          readOnly: true
+        envFrom:
+        - configMapRef:
+            name: app_name-configmap
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256M
+          limits:
+            cpu: 200m
+            memory: 512M
+        livenessProbe:
+          tcpSocket:
+            port: PORTINGO
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: PORTINGO
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 5
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: etz-ecr
+      volumes:
+      - name: app_name-volume
+        projected:
+          sources:
+          - configMap:
+              name: app_name-configmap
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app_name-configmap
+  labels: app_name
+  namespace: NSENVIRONMENT
+data:
+# ---
+
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: app_name-ingress
+#   labels:
+#     app: app_name 
+#   namespace: NSENVIRONMENT
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /$2
+# spec:
+#   ingressClassName: nginx
+#   rules:
+#   - http:
+#       paths:
+#       - path: /app_name(/|$)(.*)
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: app_name-service
+#             port:
+#               name: app_name
+
+      
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: app_name-httproute
+  labels:
+    app: app_name
+  namespace: NSENVIRONMENT
+spec:
+  parentRefs:
+    - name: traefik-gateway
+      namespace: ingress
+  # hostnames:
+  # - "whoami.docker.localhost"
+  # - "172.31.144.74"
+
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /app_name
+
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+
+      backendRefs:
+        - name: app_name-service
+          port: PORTINGO
+
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app_name-hpa
+  namespace: NSENVIRONMENT
+  labels:
+    app: app_name
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app_name-deployment
+
+  minReplicas: 2
+  maxReplicas: 10
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      selectPolicy: Min
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      selectPolicy: Max
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+        - type: Pods
+          value: 4
+          periodSeconds: 60
+
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
