@@ -1,8 +1,9 @@
 # my_gitlab_reusable_pipeline
 Reusable pipeline for fully automated gitops CICD
 
-The flow for the whole CI/CD
-### start -> caller-repo (triggers) -> revisionism (triggers) -> auto-filler -> end
+#### The flow for the whole CI/CD
+start -> caller-repo (triggers) -> revisionism (triggers) -> auto-filler -> end
+
 
 ## The caller repo
 This the repo that contains the source code which the developer works on, in this repo we will have a very short pipeline that triggers another pipeline in the revisionism repo.
