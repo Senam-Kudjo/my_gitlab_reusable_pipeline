@@ -1,0 +1,25 @@
+workflow:
+  name: ${CI_PROJECT_NAME}-Pipeline
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
+      variables:
+        ENVIRONMENT: "sandbox"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "production"
+      variables:
+        ENVIRONMENT: "production"
+   
+stages:
+  - pipeline
+
+cicd_trigger:
+  stage: pipeline
+  trigger:
+    include:
+      - project: 'forever-purple/revisionism'
+        ref: master
+        file: '.gitlab-ci.yml'
+    strategy: mirror
+  variables:
+    PORTINGO: "8080"
