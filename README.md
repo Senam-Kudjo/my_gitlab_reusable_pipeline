@@ -1,5 +1,11 @@
-# my_gitlab_reusable_pipeline
+#### my_gitlab_reusable_pipeline
 Reusable pipeline for fully automated gitops CICD
+
+# REASONS FOR THIS PROJECT
+- Acts as a templated central pipeline repository for every other caller-repos to use, hence reducing pipeline failures as is the case when there is a 1 to 1 mapping of repos to pipeline file.
+- Far reduced deployment pipeline failures
+- Ca 
+
 
 #### The flow for the whole CI/CD
 start -> caller-repo (triggers) -> revisionism (triggers) -> auto-filler -> end
@@ -18,3 +24,5 @@ This repo what is responsible for three very important functions
 3. It contains the pipeline responsible for updating the newly acquired image that is retrieved from the revisionism repo pipeline's dockerize stage into the deployment manifest file for argocd to pick up and make the necessary new deployments.
 
 NB: Note that this very repo we are in my_gitlab_reusable_pipeline is the auto-filler repo just that the name has been changed. Also note that every file in the very folder belongs to the auto-filler repo with the exception of the external-repo folders which houses both the caller-repo repo and the revisionism repo.
+
+
