@@ -1,0 +1,66 @@
+stages:
+  - docker
+  - deploy
+
+dockerize:
+  stage: docker
+  image: docker:latest
+
+  services:
+    - docker:dind
+
+  before_script:
+    - apk add --no-cache aws-cli
+    - echo $AWS_ACCOUNT_URL
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_URL
+  timeout: 8 minutes
+  script:
+    - |
+      # export REPOSITORY_NAME=$(echo "$CI_PROJECT_PATH" | awk -F/ '{print $NF}' | tr '[:upper:]' '[:lower:]')
+      export REPOSITORY_NAME="$CI_PROJECT_NAME"
+
+      echo "Using repository name: ${REPOSITORY_NAME}"
+
+    - |
+      if ! aws ecr describe-repositories \
+        --repository-names "${REPOSITORY_NAME}" \
+        --region us-east-1 > /dev/null 2>&1
+      then
+
+        echo "ECR repository not found — creating it..."
+
+        aws ecr create-repository \
+          --repository-name "${REPOSITORY_NAME}" \
+          --region "us-east-1"
+
+      else
+
+        echo "ECR repository already exists."
+
+      fi
+
+    - docker build -t $AWS_ACCOUNT_URL/$CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA .
+    - docker push $AWS_ACCOUNT_URL/$CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA
+
+trigger_gitops:
+  stage: deploy
+  needs:
+    - job: dockerize
+
+  trigger:
+    project: "Senam_Kudjo_Forever/auto-filler"
+    branch: "main"
+    strategy: depend
+ 
+
+### testing 3 way auto-callers
+  variables:
+    PORTINGO: ${PORTINGO}
+    IMAGETAG: $CI_COMMIT_SHORT_SHA
+    DEPLOYMENT_MANIFEST_NAME: $CI_PROJECT_NAME.yaml
+    REPOSITORY_NAME: $CI_PROJECT_NAME
+    SERVICE_NAME: $CI_PROJECT_NAME
+    ENVIRONMENT: ${ENVIRONMENT}
+ 
+
+ 
