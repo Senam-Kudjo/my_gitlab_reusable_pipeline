@@ -1,5 +1,6 @@
 #### my_gitlab_reusable_pipeline
 Reusable pipeline for fully automated gitops CICD
+Link to my article => https://medium.com/@senamhumado56/the-best-approach-for-gitops-6edd3c96bc23?sharedUserId=senamhumado56
 
 # REASONS FOR THIS PROJECT
 - Acts as a templated central pipeline repository for every other caller-repos to use, hence reducing pipeline failures as is the case when there is a 1 to 1 mapping of repos to pipeline file.
