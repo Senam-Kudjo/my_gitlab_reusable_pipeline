@@ -1,0 +1,92 @@
+## GO TO YOUR PARENT GROUP IN YOUR GITLAB, UNDER THE PLAN FEATURE IN THE LEFT SIDE BAR SELECT WIKI
+## COPY THE BELOW GLQL INTO THE WIKI PAGE AND SAVE CHANGES.
+
+```glql
+title: "Pipeline Job Status Distribution Over Last 30 days Across All Groups Under <INSERT_GROUP_NAME>"
+display: table
+mode: analytics
+query: type = Pipeline and group = "<INSERT_GROUP_NAME>" and finished >= -30d
+dimensions: status as "Status"
+metrics: totalCount as "Pipeline Count"
+sort: totalCount desc
+```
+
+```glql
+title: "Overall Pipeline Success Rate"
+display: stat
+mode: analytics
+query: type = Pipeline and group = "<INSERT_GROUP_NAME>" and finished >= -30d
+metrics: successRate as "Success Rate", failureRate as "Failure Rate"
+```
+
+```glql
+title: "Overall Pipeline Failure Rate"
+display: stat
+mode: analytics
+query: type = Pipeline and group = "<INSERT_GROUP_NAME>" and finished >= -30d
+metrics: failureRate as "Failure Rate"
+```
+
+```glql
+title: "Pipeline Success Rate Per Project (GT-Consumer)"
+display: table
+mode: analytics
+query: type = Pipeline and group = "<INSERT_GROUP_NAME>/gt-consumer" and finished >= -30d
+dimensions: project as "Project"
+metrics: totalCount as "Total Pipelines", successRate as "Success Rate", failureRate as "Failure Rate"
+sort: successRate asc
+limit: 19
+```
+
+```glql
+title: "Pipeline Success Rate Per Sub Group Over Last 30 days"
+display: table
+mode: analytics
+query: type = Pipeline and group = "<INSERT_GROUP_NAME>" and finished >= -30d
+dimensions: project as "Project"
+metrics: totalCount as "Total Pipelines", successRate as "Success Rate", failureRate as "Failure Rate"
+sort: successRate asc
+limit: 19
+```
+
+```glql
+title: "Weekly Pipeline Success & Failure Trend Over Last 90 days"
+display: lineChart
+mode: analytics
+query: type = Pipeline and group = "<INSERT_GROUP_NAME>" and finished >= -90d
+dimensions: finished(weekly) as "Week"
+metrics: successRate as "Success Rate", failureRate as "Failure Rate"
+sort: finished asc
+```
+
+```glql
+title: "Pipeline Failures by Branch Over Last 30 days"
+display: table
+mode: analytics
+query: type = Pipeline and group = "<INSERT_GROUP_NAME>" and finished >= -30d and status = failed
+dimensions: ref as "Branch"
+metrics: totalCount as "Failed Pipelines"
+sort: totalCount desc
+limit: 15
+```
+
+```glql
+title: "Pipeline Duration by Branch Over Last 30 days"
+display: table
+mode: analytics
+query: type = Pipeline and group = "<INSERT_GROUP_NAME>" and finished >= -30d
+dimensions: ref as "Branch"
+metrics: totalCount as "Pipeline Count", durationMean as "Average Duration", durationMax as "Maximum Duration"
+sort: durationMean desc
+limit: 20
+```
+
+```glql
+title: "Weekly Pipeline Volume"
+display: areaChart
+mode: analytics
+query: type = Pipeline and group = "<INSERT_GROUP_NAME>" and finished >= -90d
+dimensions: finished(weekly) as "Week"
+metrics: totalCount as "Pipeline Volume"
+sort: finished asc
+```
